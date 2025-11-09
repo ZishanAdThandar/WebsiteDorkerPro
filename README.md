@@ -108,13 +108,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Author
 
-- ZishanAdThandar
+- Zishan Ahamed Thandar
 
   -  Portfolio: ZishanAdThandar.github.io
 
   -  GitHub: @ZishanAdThandar
 
-Disclaimer
+## Disclaimer
 
 This tool is intended for educational purposes and legitimate security testing only. Always ensure you have proper authorization before testing any systems. The developers are not responsible for any misuse of this tool.
 text
