@@ -19,6 +19,8 @@ A comprehensive reconnaissance tool for bug bounty hunters, penetration testers,
 - ☁️ **Cloud & Infrastructure**: S3, Azure, Shodan, Censys
 - ⚡ **Custom Tools**: Custom dorks, quick scans, utilities
 
+![image](banner.png)
+
 ## Installation
 
 ### From PyPI
