@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "website-dorker-pro"
-version = "1.1.0"  # ← Updated version
+version = "2.1.0"  # ← Updated version
 description = "Website Reconnaissance Toolkit for Bug Hunters and Pentesters"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.7"
 authors = [
-    {name = "Zishan Ahamed Thandar", email = "your-email@example.com"}  # ← Updated
+    {name = "Zishan Ahamed Thandar"}
 ]
 license = {text = "MIT"}
 keywords = [

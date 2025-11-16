@@ -99,20 +99,6 @@ Available Dork Categories
     pastebin - Pastebin leaks
 ```
 
-## Changelog
-
-### v1.1.0
-- 🎨 Improved UI with comfortable hacker theme
-- 🔧 Enhanced domain extraction from URLs
-- 📝 Added placeholder text in domain field
-- 📊 Expanded console log with scrollable history
-- 👤 Updated author name to Zishan Ahamed Thandar
-- 🐛 Fixed various bugs and improved stability
-
-### v1.0.0
-- Initial release
-- Basic reconnaissance functionality
-- 8 comprehensive tabs for different search types
 
 ## Contributing
 

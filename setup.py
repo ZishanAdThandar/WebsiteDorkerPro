@@ -7,9 +7,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="website-dorker-pro",
-    version="1.1.0",  # ← Updated version
-    author="Zishan Ahamed Thandar",  # ← Updated full name
-    author_email="your-email@example.com",  # Update with your actual email
+    version="2.1.0",  
+    author="Zishan Ahamed Thandar", 
     description="Website Reconnaissance Toolkit for Bug Hunters and Pentesters",
     long_description=long_description,
     long_description_content_type="text/markdown",
