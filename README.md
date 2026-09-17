@@ -107,26 +107,12 @@ License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Links
-
-- 🌐 Website: [zishanhack.com](https://zishanhack.com)
-- 🧭 Linktree: [zishanhack.com/links](https://zishanhack.com/links/)
-- 📄 Portfolio: [zishanhack.com/about](https://zishanhack.com/about/)
-- 📝 Resume: [zishanhack.com/about/resume](https://zishanhack.com/about/resume)
-- 💻 GitHub: [@ZishanAdThandar](https://github.com/ZishanAdThandar/)
-- 💼 LinkedIn: [ZishanAdThandar](https://linkedin.com/in/ZishanAdThandar)
-- 🐦 Twitter/X: [@ZishanAdThandar](https://twitter.com/ZishanAdThandar)
-- ✈️ Telegram: [@ZishanHack](https://t.me/ZishanHack)
-- 🎮 Discord: [ZishanHack Community](https://discord.gg/T47v67eVT4)
-- 📺 YouTube: [ZishanAdThandar](https://youtube.com/ZishanAdThandar)
-
 ## Author
 
-- Zishan Ahamed Thandar
-
-  -  Portfolio: [ZishanAdThandar.github.io](https:/zishanadthandar.github.io)
-
-  -  Website: [ZishanHack](https://zishanhack.com)
+Zishan Ahamed Thandar
+- 🌐 Website: [zishanhack.com](https://zishanhack.com)
+- 🧭 Linktree: [zishanhack.com/links/](https://zishanhack.com/links/)
+- 📄 Portfolio: [zishanhack.com/about/](https://zishanhack.com/about/)
 
 ## Disclaimer
 
