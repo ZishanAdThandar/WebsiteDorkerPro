@@ -8,14 +8,6 @@ import webbrowser
 import urllib.parse
 import sys
 
-try:
-    from .core import passive_recon
-except ImportError:
-    try:
-        from core import passive_recon
-    except ImportError:
-        passive_recon = None
-
 class WebsiteDorkerProCLI:
     """Command Line Interface for WebsiteDorkerPro"""
     
@@ -71,18 +63,6 @@ class WebsiteDorkerProCLI:
             self.search(domain, category)
         
         print("✅ Quick scan completed!")
-    
-    def live_recon(self, domain):
-        """
-        Run the dependency-free live reconnaissance sweep (core.py) and
-        return the plain-text report. Prints progress to stdout.
-        """
-        if passive_recon is None:
-            return "❌ Recon engine unavailable (core.py missing)."
-        print(f"🛰️ Live reconnaissance for: {domain}")
-        report = passive_recon(domain)
-        print(report)
-        return report
 
 def main():
     """Main CLI entry point"""
@@ -102,10 +82,6 @@ Examples:
     parser.add_argument('-c', '--category', help='Dork category to use')
     parser.add_argument('-d', '--dork', help='Custom dork string (use {domain} as placeholder)')
     parser.add_argument('-q', '--quick-scan', action='store_true', help='Perform quick reconnaissance scan')
-    parser.add_argument('-r', '--recon', action='store_true',
-                        help='Run live dependency-free recon (DNS, headers, robots, subdomains, fuzz)')
-    parser.add_argument('-e', '--export', metavar='FILE',
-                        help='Save the recon report to a text file')
     parser.add_argument('-l', '--list-categories', action='store_true', help='List available dork categories')
     parser.add_argument('-g', '--gui', action='store_true', help='Launch GUI interface')
     
@@ -115,20 +91,6 @@ Examples:
     
     if args.list_categories:
         cli.list_categories()
-        return
-    
-    if args.recon:
-        if not args.domain:
-            parser.print_help()
-            return
-        report = cli.live_recon(args.domain)
-        if args.export:
-            try:
-                with open(args.export, 'w', encoding='utf-8') as fh:
-                    fh.write(report)
-                print(f"\n📁 Report saved to: {args.export}")
-            except Exception as e:
-                print(f"❌ Could not write report: {e}")
         return
     
     if args.gui:

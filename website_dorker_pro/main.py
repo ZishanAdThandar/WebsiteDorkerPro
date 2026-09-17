@@ -9,19 +9,7 @@ except ImportError:
 import webbrowser
 import urllib.parse
 import re
-import threading
-import queue
 from datetime import datetime
-
-try:
-    from .core import passive_recon as _core_passive_recon
-except ImportError:
-    try:
-        from core import passive_recon as _core_passive_recon
-    except ImportError:
-        _core_passive_recon = None
-
-RECON_HAS_CORE = _core_passive_recon is not None
 
 class WebsiteDorkerPro:
     """
@@ -340,90 +328,6 @@ class WebsiteDorkerPro:
             ("🔍 Port Scan", self.port_scan, "Check open ports via Shodan"),
         ]
         self.create_section(recon_frame, "Initial Reconnaissance", buttons, columns=2)
-
-        if RECON_HAS_CORE:
-            live_res = [
-                ("🛰️ Live Recon Sweep", self.start_live_recon,
-                 "Run core.py live recon (DNS, headers, robots, subdomains, fuzz)"),
-                ("💾 Export Report", self.save_recon_report, "Save the last live recon report to a file"),
-            ]
-            self.create_section(recon_frame, "Live Recon (dependency-free)", live_res, columns=2)
-
-    # ── Live Recon — dependency-free sweep (threaded) ────────────────────────
-    # core.py uses only the stdlib (urllib/socket/ssl/re/json) so the sweep
-    # can run on any machine with zero pip installs. We push work onto a
-    # background thread and drain results into the console via root.after,
-    # so the GUI stays responsive even while the network calls run.
-    def start_live_recon(self):
-        """Run the live — fully dependency-free — recon sweep (core.py)."""
-        if not RECON_HAS_CORE:
-            self.log_to_console("⚠️ Live recon unavailable: core.py missing/ImportError.")
-            return
-
-        domain = self.get_domain()
-        if not domain:
-            return
-
-        if not hasattr(self, "_recon_queue"):
-            self._recon_queue = queue.Queue()
-            self._last_live_report = ""
-
-        self.log_to_console(f"🛰️ Live reconnaissance for: {domain}")
-        worker = threading.Thread(
-            target=self._run_live_recon_worker, args=(domain,), daemon=True
-        )
-        worker.start()
-        self.root.after(100, self._poll_recon_queue)
-
-    def _run_live_recon_worker(self, domain):
-        """Worker thread: run core.passive_recon, enqueue the report text."""
-        try:
-            report = _core_passive_recon(domain)
-            self._recon_queue.put(("report", report))
-        except Exception as e:
-            self._recon_queue.put(("error", f"{type(e).__name__}: {e}"))
-
-    def _poll_recon_queue(self):
-        """Non-blocking drain of the recon queue (called via root.after)."""
-        if not hasattr(self, "_recon_queue"):
-            return
-        try:
-            while True:
-                kind, payload = self._recon_queue.get_nowait()
-                if kind == "report":
-                    self._last_live_report = payload
-                    self.log_to_console(payload)
-                    self.log_to_console("✅ Live recon complete — use 💾 Export Report to save it.")
-                else:
-                    self.log_to_console(f"❌ Live recon error: {payload}")
-        except queue.Empty:
-            pass
-        if not self._recon_queue.empty():
-            self.root.after(100, self._poll_recon_queue)
-
-    def save_recon_report(self):
-        """Export the last live recon report to a text file (stdlib only)."""
-        report = getattr(self, "_last_live_report", "")
-        if not report:
-            self.log_to_console("⚠️ No live recon report yet — run 🛰️ Live Recon first.")
-            return
-        try:
-            from tkinter import filedialog
-        except ImportError:
-            return
-        path = filedialog.asksaveasfilename(
-            defaultextension=".txt",
-            filetypes=[("Text files", "*.txt"), ("Markdown files", "*.md"), ("All files", "*.*")],
-            title="Export Live Recon Report",
-        )
-        if not path:
-            return
-        try:
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(report)
-            self.log_to_console(f"💾 Report exported to: {path}")
-        except Exception as e:
-            self.log_to_console(f"❌ Could not export report: {e}")
 
     def create_files_tab(self, notebook):
         tab = ttk.Frame(notebook, style="Main.TFrame")
