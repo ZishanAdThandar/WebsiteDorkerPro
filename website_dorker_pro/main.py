@@ -1,5 +1,11 @@
-import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+try:
+    import tkinter as tk
+    from tkinter import ttk, messagebox, simpledialog
+    HAS_TKINTER = True
+except ImportError:
+    tk = ttk = messagebox = simpledialog = None
+    HAS_TKINTER = False
+
 import webbrowser
 import urllib.parse
 import re
@@ -11,10 +17,16 @@ class WebsiteDorkerPro:
     """
     
     def __init__(self, root=None):
+        if not HAS_TKINTER:
+            raise ImportError("tkinter is required for the GUI. Install it via your system package manager (e.g. 'sudo apt install python3-tk').")
         if root is None:
             self.root = tk.Tk()
         else:
             self.root = root
+        
+        self.footer_links = [
+            ("Linktree", "https://zishanhack.com/links/"),
+        ]
             
         self.setup_gui()
     
@@ -26,6 +38,8 @@ class WebsiteDorkerPro:
         domain = re.sub(r'^www\.', '', domain)
         # Remove path and query parameters
         domain = re.sub(r'[/?#].*$', '', domain)
+        # Remove port (e.g. example.com:8080)
+        domain = re.sub(r':\d+$', '', domain)
         # Remove trailing slash
         domain = domain.rstrip('/')
         return domain
@@ -94,6 +108,7 @@ class WebsiteDorkerPro:
                                     highlightthickness=1)
         self.domain_entry.pack(side=tk.LEFT, padx=12, pady=6)
         self.domain_entry.insert(0, "example.com or https://example.com")
+        self.domain_entry.config(fg="gray")
         self.domain_entry.bind("<FocusIn>", self.clear_placeholder)
         self.domain_entry.bind("<Return>", lambda e: self.quick_recon())
         
@@ -169,26 +184,17 @@ class WebsiteDorkerPro:
         links_frame = ttk.Frame(footer_frame, style="Footer.TFrame")
         links_frame.pack(side=tk.RIGHT)
         
-        portfolio_link = ttk.Label(links_frame, 
-                                  text="Portfolio", 
-                                  cursor="hand2", 
-                                  font=("Segoe UI", 9),
-                                  foreground=self.accent_color, 
-                                  style="Footer.TLabel")
-        portfolio_link.pack(side=tk.LEFT)
-        portfolio_link.bind("<Button-1>", lambda e: webbrowser.open("https://ZishanAdThandar.github.io"))
-        
-        ttk.Label(links_frame, text=" • ", style="Footer.TLabel").pack(side=tk.LEFT)
-        
-        github_link = ttk.Label(links_frame, 
-                               text="GitHub", 
-                               cursor="hand2",
-                               font=("Segoe UI", 9),
-                               foreground=self.accent_color, 
-                               style="Footer.TLabel")
-        github_link.pack(side=tk.LEFT)
-        github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/ZishanAdThandar"))
-    
+        for name, url in self.footer_links:
+            link = ttk.Label(links_frame,
+                              text=name,
+                              cursor="hand2",
+                              font=("Segoe UI", 9),
+                              foreground=self.accent_color,
+                              style="Footer.TLabel")
+            link.pack(side=tk.LEFT, padx=(0, 10))
+            link.bind("<Button-1>", lambda e, u=url: webbrowser.open(u))
+            self.create_tooltip(link, url)
+
     def clear_placeholder(self, event):
         """Clear placeholder text when entry is focused"""
         if self.domain_entry.get() == "example.com or https://example.com":
@@ -477,359 +483,361 @@ class WebsiteDorkerPro:
             messagebox.showerror("Error", f"Could not open URL: {str(e)}")
 
     # === RECONNAISSANCE METHODS ===
-    def subdomains_search(self):
-        if domain := self.get_domain():
+    def subdomains_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:*.{urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"Subdomain discovery for {domain}")
 
-    def certificate_search(self):
-        if domain := self.get_domain():
+    def certificate_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://crt.sh/?q={urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"SSL certificate search for {domain}")
 
-    def wayback_machine(self):
-        if domain := self.get_domain():
+    def wayback_machine(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://web.archive.org/web/*/{urllib.parse.quote(domain)}/*"
             self.open_url(url)
             self.log_to_console(f"Wayback Machine search for {domain}")
 
-    def dns_recon(self):
-        if domain := self.get_domain():
+    def dns_recon(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://viewdns.info/dnsrecord/?domain={urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"DNS reconnaissance for {domain}")
 
-    def reverse_ip(self):
-        if domain := self.get_domain():
+    def reverse_ip(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://viewdns.info/reverseip/?host={urllib.parse.quote(domain)}&t=1"
             self.open_url(url)
             self.log_to_console(f"Reverse IP lookup for {domain}")
 
-    def security_headers(self):
-        if domain := self.get_domain():
+    def security_headers(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://securityheaders.com/?q={urllib.parse.quote(domain)}&followRedirects=on"
             self.open_url(url)
             self.log_to_console(f"Security headers check for {domain}")
 
-    def whois_lookup(self):
-        if domain := self.get_domain():
+    def whois_lookup(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://whois.domaintools.com/{urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"WHOIS lookup for {domain}")
 
-    def port_scan(self):
-        if domain := self.get_domain():
+    def port_scan(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.shodan.io/host/{urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"Port scan for {domain}")
 
     # === FILE DISCOVERY METHODS ===
-    def open_directories(self):
-        if domain := self.get_domain():
+    def open_directories(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+intitle:index.of"
             self.open_url(url)
             self.log_to_console(f"Open directories search for {domain}")
 
-    def config_files(self):
-        if domain := self.get_domain():
+    def config_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:xml+|+ext:conf+|+ext:cnf+|+ext:reg+|+ext:inf+|+ext:rdp+|+ext:cfg+|+ext:txt+|+ext:ora+|+ext:ini+|+ext:env"
             self.open_url(url)
             self.log_to_console(f"Configuration files search for {domain}")
 
-    def database_files(self):
-        if domain := self.get_domain():
+    def database_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:sql+|+ext:dbf+|+ext:mdb+|+ext:db+|+ext:sqlite+|+ext:dump"
             self.open_url(url)
             self.log_to_console(f"Database files search for {domain}")
 
-    def log_files(self):
-        if domain := self.get_domain():
+    def log_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:log+|+ext:logs"
             self.open_url(url)
             self.log_to_console(f"Log files search for {domain}")
 
-    def backup_files(self):
-        if domain := self.get_domain():
+    def backup_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:bkf+|+ext:bkp+|+ext:bak+|+ext:old+|+ext:backup+|+ext:tar.gz+|+ext:tgz+|+ext:zip"
             self.open_url(url)
             self.log_to_console(f"Backup files search for {domain}")
 
-    def documents(self):
-        if domain := self.get_domain():
+    def documents(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:doc+|+ext:docx+|+ext:odt+|+ext:pdf+|+ext:rtf+|+ext:sxw+|+ext:psw+|+ext:ppt+|+ext:pptx+|+ext:pps+|+ext:csv+|+ext:xls+|+ext:xlsx"
             self.open_url(url)
             self.log_to_console(f"Documents search for {domain}")
 
-    def ssh_keys(self):
-        if domain := self.get_domain():
+    def ssh_keys(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:key+|+ext:pem+|+ext:ppk+|+ext:pub+%22ssh%22"
             self.open_url(url)
             self.log_to_console(f"SSH keys search for {domain}")
 
-    def ssl_certs(self):
-        if domain := self.get_domain():
+    def ssl_certs(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:crt+|+ext:pem+|+ext:cer+|+ext:der"
             self.open_url(url)
             self.log_to_console(f"SSL certificates search for {domain}")
 
     # === TECHNOLOGY DETECTION METHODS ===
-    def wordpress(self):
-        if domain := self.get_domain():
+    def wordpress(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+inurl:wp-+|+inurl:wp-content+|+inurl:plugins+|+inurl:uploads+|+inurl:themes"
             self.open_url(url)
             self.log_to_console(f"WordPress reconnaissance for {domain}")
 
-    def php_info(self):
-        if domain := self.get_domain():
+    def php_info(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:php+intitle:phpinfo+%22published+by+the+PHP+Group%22"
             self.open_url(url)
             self.log_to_console(f"PHP info pages search for {domain}")
 
-    def apache_config(self):
-        if domain := self.get_domain():
+    def apache_config(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+filetype:config+%22apache%22"
             self.open_url(url)
             self.log_to_console(f"Apache config files search for {domain}")
 
-    def env_files(self):
-        if domain := self.get_domain():
+    def env_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:env+|+inurl:.env+%22API%22+%22KEY%22"
             self.open_url(url)
             self.log_to_console(f"Environment files search for {domain}")
 
-    def django_debug(self):
-        if domain := self.get_domain():
+    def django_debug(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+intext:%22DEBUG+%3D+True%22+|+intext:%22settings.DEBUG%22"
             self.open_url(url)
             self.log_to_console(f"Django debug mode search for {domain}")
 
-    def java_files(self):
-        if domain := self.get_domain():
+    def java_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:jsp+|+ext:jspx+|+ext:java+|+ext:class+|+ext:war"
             self.open_url(url)
             self.log_to_console(f"Java files search for {domain}")
 
-    def wsdl_files(self):
-        if domain := self.get_domain():
+    def wsdl_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+filetype:wsdl+|+filetype:WSDL+|+ext:svc+|+inurl:wsdl"
             self.open_url(url)
             self.log_to_console(f"WSDL files search for {domain}")
 
-    def cms_detection(self):
-        if domain := self.get_domain():
+    def cms_detection(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://whatcms.org/?s={urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"CMS detection for {domain}")
 
     # === VULNERABILITY SCANNING METHODS ===
-    def sql_errors(self):
-        if domain := self.get_domain():
+    def sql_errors(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+intext:%22sql+syntax+near%22+|+intext:%22syntax+error+has+occurred%22+|+intext:%22Warning:+mysql_connect()%22"
             self.open_url(url)
             self.log_to_console(f"SQL errors search for {domain}")
 
-    def login_pages(self):
-        if domain := self.get_domain():
+    def login_pages(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+inurl:login+|+inurl:signin+|+intitle:Login+|+intitle:signin+|+inurl:auth"
             self.open_url(url)
             self.log_to_console(f"Login pages search for {domain}")
 
-    def redirects(self):
-        if domain := self.get_domain():
+    def redirects(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+inurl:redir+|+inurl:url+|+inurl:redirect+|+inurl:return+|+inurl:src=http"
             self.open_url(url)
             self.log_to_console(f"Open redirects search for {domain}")
 
-    def shells_backdoors(self):
-        if domain := self.get_domain():
+    def shells_backdoors(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+inurl:shell+|+inurl:backdoor+|+inurl:wso+|+inurl:c99+|+inurl:r57"
             self.open_url(url)
             self.log_to_console(f"Web shells search for {domain}")
 
-    def crossdomain_xml(self):
-        if domain := self.get_domain():
+    def crossdomain_xml(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q={urllib.parse.quote(domain)}/crossdomain.xml"
             self.open_url(url)
             self.log_to_console(f"Crossdomain policy check for {domain}")
 
-    def robots_txt(self):
-        if domain := self.get_domain():
+    def robots_txt(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q={urllib.parse.quote(domain)}/robots.txt"
             self.open_url(url)
             self.log_to_console(f"Robots.txt check for {domain}")
 
-    def xss_points(self):
-        if domain := self.get_domain():
+    def xss_points(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+inurl:?+|+inurl:&+|+inurl:query+|+inurl:search+|+inurl:redirect"
             self.open_url(url)
             self.log_to_console(f"XSS vulnerable points search for {domain}")
 
-    def email_harvest(self):
-        if domain := self.get_domain():
+    def email_harvest(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+%22@%22+%22email%22+%22contact%22"
             self.open_url(url)
             self.log_to_console(f"Email harvesting for {domain}")
 
     # === SENSITIVE DATA METHODS ===
-    def api_keys(self):
-        if domain := self.get_domain():
+    def api_keys(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+%22api_key%22+|+%22api+key%22+|+%22secret_key%22+|+%22password%22+filetype:env"
             self.open_url(url)
             self.log_to_console(f"API keys search for {domain}")
 
-    def email_lists(self):
-        if domain := self.get_domain():
+    def email_lists(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:csv+|+ext:xls+|+ext:xlsx+%22email%22+%22password%22"
             self.open_url(url)
             self.log_to_console(f"Email lists search for {domain}")
 
-    def exposed_users(self):
-        if domain := self.get_domain():
+    def exposed_users(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+intitle:%22index+of%22+%22users%22+|+inurl:%22user+profiles%22"
             self.open_url(url)
             self.log_to_console(f"Exposed users search for {domain}")
 
-    def payment_info(self):
-        if domain := self.get_domain():
+    def payment_info(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+%22payment%22+|+%22credit+card%22+|+%22paypal%22+filetype:csv"
             self.open_url(url)
             self.log_to_console(f"Payment information search for {domain}")
 
-    def financial_data(self):
-        if domain := self.get_domain():
+    def financial_data(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+%22financial%22+|+%22bank%22+|+%22account%22+filetype:xls"
             self.open_url(url)
             self.log_to_console(f"Financial data search for {domain}")
 
-    def analytics_data(self):
-        if domain := self.get_domain():
+    def analytics_data(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+%22analytics%22+|+%22tracking%22+|+%22google+analytics%22"
             self.open_url(url)
             self.log_to_console(f"Analytics data search for {domain}")
 
-    def password_files(self):
-        if domain := self.get_domain():
+    def password_files(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+%22password%22+filetype:txt+|+filetype:log"
             self.open_url(url)
             self.log_to_console(f"Password files search for {domain}")
 
-    def config_secrets(self):
-        if domain := self.get_domain():
+    def config_secrets(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+%22secret%22+|+%22token%22+|+%22key%22+filetype:env"
             self.open_url(url)
             self.log_to_console(f"Config secrets search for {domain}")
 
     # === EXTERNAL RECON METHODS ===
-    def github_search(self):
-        if domain := self.get_domain():
+    def github_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://github.com/search?q=%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"GitHub search for {domain}")
 
-    def pastebin_search(self):
-        if domain := self.get_domain():
+    def pastebin_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:pastebin.com+{urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"Pastebin search for {domain}")
 
-    def linkedin_employees(self):
-        if domain := self.get_domain():
+    def linkedin_employees(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:linkedin.com+employees+{urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"LinkedIn employees search for {domain}")
 
-    def reddit_search(self):
-        if domain := self.get_domain():
+    def reddit_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.reddit.com/search/?q={urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"Reddit search for {domain}")
 
-    def youtube_search(self):
-        if domain := self.get_domain():
+    def youtube_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"YouTube search for {domain}")
 
-    def stack_overflow(self):
-        if domain := self.get_domain():
+    def stack_overflow(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:stackoverflow.com+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"Stack Overflow search for {domain}")
 
-    def gitlab_search(self):
-        if domain := self.get_domain():
+    def gitlab_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=inurl:gitlab+{urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"GitLab search for {domain}")
 
-    def confluence_search(self):
-        if domain := self.get_domain():
+    def confluence_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:*.atlassian.net+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"Confluence search for {domain}")
 
     # === CLOUD INFRASTRUCTURE METHODS ===
-    def s3_buckets(self):
-        if domain := self.get_domain():
+    def s3_buckets(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:.s3.amazonaws.com+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"S3 buckets search for {domain}")
 
-    def digitalocean_spaces(self):
-        if domain := self.get_domain():
+    def digitalocean_spaces(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:digitaloceanspaces.com+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"DigitalOcean Spaces search for {domain}")
 
-    def azure_blobs(self):
-        if domain := self.get_domain():
+    def azure_blobs(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:blob.core.windows.net+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"Azure Blobs search for {domain}")
 
-    def shodan_search(self):
-        if domain := self.get_domain():
+    def shodan_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.shodan.io/search?query={urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"Shodan search for {domain}")
 
-    def censys_search(self):
-        if domain := self.get_domain():
+    def censys_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://censys.io/ipv4?q={urllib.parse.quote(domain)}"
             self.open_url(url)
             self.log_to_console(f"Censys search for {domain}")
 
-    def google_cloud(self):
-        if domain := self.get_domain():
+    def google_cloud(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:storage.googleapis.com+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"Google Cloud Storage search for {domain}")
 
-    def firebase_search(self):
-        if domain := self.get_domain():
+    def firebase_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:firebaseio.com+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"Firebase search for {domain}")
 
-    def heroku_search(self):
-        if domain := self.get_domain():
+    def heroku_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:herokuapp.com+%22{urllib.parse.quote(domain)}%22"
             self.open_url(url)
             self.log_to_console(f"Heroku search for {domain}")
 
     # === CUSTOM TOOLS METHODS ===
-    def custom_dork_search(self):
-        if domain := self.get_domain():
+    def custom_dork_search(self, domain=None):
+        if domain := domain or self.get_domain():
             dork = simpledialog.askstring("Custom Dork", "Enter your Google dork:")
             if dork:
                 url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+{urllib.parse.quote(dork)}"
                 self.open_url(url)
                 self.log_to_console(f"Custom dork search for {domain}: {dork}")
 
-    def quick_scan(self):
-        if domain := self.get_domain():
+    def quick_scan(self, domain=None):
+        if domain is None:
+            domain = self.get_domain()
+        if domain:
             self.log_to_console(f"Starting quick reconnaissance scan for {domain}")
             # Run multiple common searches
             searches = [
@@ -841,36 +849,35 @@ class WebsiteDorkerPro:
                 self.php_info
             ]
             for search in searches:
-                search()
+                search(domain)
             self.log_to_console("Quick scan completed - multiple searches opened")
 
-    def url_fuzzer(self):
-        if domain := self.get_domain():
+    def url_fuzzer(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+inurl:admin+|+inurl:login+|+inurl:test+|+inurl:backup"
             self.open_url(url)
             self.log_to_console(f"URL fuzzing for {domain}")
 
-    def sitemap_generator(self):
-        if domain := self.get_domain():
+    def sitemap_generator(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+filetype:xml+%22sitemap%22"
             self.open_url(url)
             self.log_to_console(f"Sitemap search for {domain}")
 
-    def reverse_image_search(self):
-        if domain := self.get_domain():
+    def reverse_image_search(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=site:{urllib.parse.quote(domain)}+ext:jpg+|+ext:png+|+ext:gif"
             self.open_url(url)
             self.log_to_console(f"Reverse image search for {domain}")
 
-    def leak_check(self):
-        if domain := self.get_domain():
+    def leak_check(self, domain=None):
+        if domain := domain or self.get_domain():
             url = f"https://www.google.com/search?q=%22{urllib.parse.quote(domain)}%22+%22password%22+%22leak%22+%22breach%22"
             self.open_url(url)
             self.log_to_console(f"Leak check for {domain}")
 
-    def quick_recon(self):
-        if domain := self.get_domain():
-            self.quick_scan()
+    def quick_recon(self, domain=None):
+        self.quick_scan(domain)
 
     def clear_domain(self):
         self.domain_entry.delete(0, tk.END)

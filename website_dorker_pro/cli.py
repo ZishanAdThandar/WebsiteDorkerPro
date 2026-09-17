@@ -95,14 +95,15 @@ Examples:
     
     if args.gui:
         try:
-            from .main import WebsiteDorkerPro
-            app = WebsiteDorkerPro()
-            app.run()
+            from .main import WebsiteDorkerPro, HAS_TKINTER
         except ImportError:
             # Fallback for direct execution
-            from main import WebsiteDorkerPro
-            app = WebsiteDorkerPro()
-            app.run()
+            from main import WebsiteDorkerPro, HAS_TKINTER
+        if not HAS_TKINTER:
+            print("❌ tkinter is not available. Install it via your system package manager (e.g. 'sudo apt install python3-tk').")
+            sys.exit(1)
+        app = WebsiteDorkerPro()
+        app.run()
         return
     
     if not args.domain:

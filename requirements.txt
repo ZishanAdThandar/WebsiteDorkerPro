@@ -1,1 +1,2 @@
-tkinter
+# tkinter is part of the Python standard library and is NOT pip-installable.
+# On Debian/Ubuntu you may need: sudo apt install python3-tk
